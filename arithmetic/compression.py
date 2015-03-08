@@ -17,7 +17,6 @@ class ArithmeticEncoder(object):
             lines = f.readlines()
 
         # Generate the frequency, word_list, alphabet and the empirical probabilities of the letters
-        print "Generating word frequencies and finding phonemes . . ."
         frequency, word_list = self.letters_and_frequencies(lines)
         self.alphabet = sorted(frequency.keys())
         tot_letters = sum(frequency.values())
