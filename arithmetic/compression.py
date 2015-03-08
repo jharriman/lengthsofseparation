@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 import sys
 import copy
 import numpy as np
@@ -15,7 +14,7 @@ class ArithmeticEncoder(object):
         # Open the dx1 file for writing
         with open(dictFile, "r") as f:
             lines = f.readlines()
-        
+
         # Generate the frequency, word_list, alphabet and the empirical probabilities of the letters
         print "Generating word frequencies and finding phonemes . . ."
         frequency, word_list, word_phonemes = self.letters_and_frequencies(lines)
@@ -32,6 +31,12 @@ class ArithmeticEncoder(object):
         # Create reverse intervals for decoding, removing the trace.
         self.reverseIntervals = {v: k for k, v in self.intervals.items() if k != "trace"}
 
+    def encodePhrase(self, string):
+        words = string.split()
+        return [self.encode(x) for x in words]
+
+    def decodeSet(self, numbers):
+        return " ".join([self.decode(x) for x in numbers])
 
     def encode(self, word):
         letters = list(word)
