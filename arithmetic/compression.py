@@ -1,3 +1,4 @@
+# Copyright 2015 GNU GPL
 import sys
 import copy
 import numpy as np
@@ -11,22 +12,20 @@ def lerp(l, h, w):
 
 class ArithmeticEncoder(object):
     def __init__(self, dictFile):
-        # Open the dx1 file for writing
+        # Open the word list for reading
         with open(dictFile, "r") as f:
             lines = f.readlines()
 
         # Generate the frequency, word_list, alphabet and the empirical probabilities of the letters
         print "Generating word frequencies and finding phonemes . . ."
-        frequency, word_list, word_phonemes = self.letters_and_frequencies(lines)
-        alphabet = sorted(frequency.keys())
+        frequency, word_list = self.letters_and_frequencies(lines)
+        self.alphabet = sorted(frequency.keys())
         tot_letters = sum(frequency.values())
         probabilities = dict(map(lambda (k,v): (k, float(v)/tot_letters), frequency.iteritems()))
 
-        # Since we are using the unigram model, the interval widths can be precomputed (to an extent)
-        # After trying this I've discovered that I realy should only be doing one interval
-        # But we save time by keeping a record of every interval that we generate
+        # Generate the intervals
         levels = 1
-        self.intervals, self.interval_widths = self.create_intervals(alphabet, probabilities, levels)
+        self.intervals = self.create_intervals(self.alphabet, probabilities, levels)
 
         # Create reverse intervals for decoding, removing the trace.
         self.reverseIntervals = {v: k for k, v in self.intervals.items() if k != "trace"}
@@ -58,8 +57,7 @@ class ArithmeticEncoder(object):
     def decode(self, number):
         word = list()
         range = (0,1)
-        go = True
-        while(go):
+        while(True):
             # TODO! This is horribly inefficient, should use a different structure
             # to contain this information
             for key in self.reverseIntervals.keys():
@@ -69,12 +67,10 @@ class ArithmeticEncoder(object):
                 if number > lerpedKey[0] and number <= lerpedKey[1]:
                     letter = self.reverseIntervals[key]
                     if letter == "#":
-                        go = False
+                        return "".join(word)
                         break
                     word.append(self.reverseIntervals[key])
                     range = lerpedKey
-        return "".join(word)
-
 
     def create_intervals(self, alphabet, probs, depth):
         intervals = dict()
@@ -84,7 +80,8 @@ class ArithmeticEncoder(object):
         for letter in alphabet:
             intervals[letter] = probs[letter] + prev_ci
 
-        # Remove hash from the alphabet so that gen_intervals can add it at the /end/ of our intervals, as per the course notes
+        # Remove hash from the alphabet so that gen_intervals can add it at the
+        # the end of the interval (end of word characters must be treated differently)
         alphabet.remove("#")
 
         # Generate layers of dictionaries up to the maximum depth for the corpus
@@ -94,7 +91,7 @@ class ArithmeticEncoder(object):
 
         # Add the hash back
         alphabet.append("#")
-        return layers, intervals
+        return layers
 
     def gen_intervals(self, width, start, end, letters, interval_width, depth):
         new_interval = dict()
@@ -124,41 +121,18 @@ class ArithmeticEncoder(object):
         return new_interval
 
     def letters_and_frequencies(self, lines):
-        # Check if the lines have a phonemic representation at the end
-        line = lines[0]
-        segments = line.split()
-        symbols = dict()
-
+        symbols = {}
         # Maintain a word_list and a list of phonemes for each word
-        word_list = list()
-        word_phonemes = dict()
-
-        if len(segments) >= 3: # The phonemic representation is present so we accept this
-            for line in lines:
-                segments = line.split()
-                word = segments[0]
-                if "#" not in word:
-                    word += "#"
-                word_list.append(word)
-                sym_list = list()
-                for i in range(2, len(segments)):
-                    symbol = segments[i]
-                    sym_list.append(symbol)
-                    symbols[symbol] = symbols.get(symbol, 0) + 1
-                if "#" not in segments:
-                    sym_list.append("#")
-                    symbols["#"] = symbols.get("#", 0) + 1
-                word_phonemes[word] = sym_list
-        else: # The phonemes aren't present, use the letters
-            for line in lines:
-                segments = line.split()
-                word = segments[0]
-                if "#" not in word:
-                    word += "#"
-                word_list.append(word)
-                let_list = list()
-                for letter in word:
-                    let_list.append(letter)
-                    symbols[letter] = symbols.get(letter, 0) + 1
-                word_phonemes[word] = let_list
-        return symbols, word_list, word_phonemes
+        word_list = []
+        for line in lines:
+            segments = line.split()
+            word = segments[0]
+            # Need an end of line break, if its not already part of the word.
+            if "#" not in word:
+                word += "#"
+            word_list.append(word)
+            let_list = list()
+            for letter in word:
+                let_list.append(letter)
+                symbols[letter] = symbols.get(letter, 0) + 1
+        return symbols, word_list
