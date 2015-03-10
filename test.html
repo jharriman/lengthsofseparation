@@ -1,0 +1,78 @@
+<!-- <!DOCTYPE html> -->
+<!-- <html> -->
+<!-- <body> -->
+<!-- <script src="http://cdn.graphalchemist.com/alchemy.min.js"></script> -->
+<!-- <script type="text/javascript"> -->
+<!--   alchemy.begin({ -->
+<!--         dataSource: "actors.json", -->
+<!--         nodeCaption: 'name', -->
+<!--         nodeMouseOver: 'name', -->
+<!--         cluster: true, -->
+<!--         clusterColours: ["#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E","#E6AB02"]}) -->
+<!-- </script> -->
+<!-- </body> -->
+<!-- </html> -->
+<html>
+<head>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <link rel="stylesheet" href="http://cdn.graphalchemist.com/alchemy.min.css"/>
+</head>
+<body>
+  <div class="alchemy" id="alchemy"></div>
+
+  <script src="http://cdn.graphalchemist.com/alchemy.js"></script>
+  <script type="text/javascript">
+    var currentNodes = [null, null];
+    var removeCurrentNode = function(node){
+      if (currentNodes[0] == node){
+        currentNodes[0] = null;
+      }
+      else if (currentNodes[1] == node){
+        currentNodes[1] = currentNodes[0];
+        currentNodes[0] = null;
+      }
+      // Else do nothing
+      return
+    }
+    var addCurrentNode = function(node){
+      if(currentNodes[0] == null){
+        currentNodes[0] = node;
+      }
+      else if (currentNodes[1] == null){
+        currentNodes[1] = currentNodes[0];
+        currentNodes[0] = node;
+      }
+      // Remove highlight if something outside of our buffer is selected.
+      else {
+        // Remove highlight from currentNode[1] since it will be removed from the buffer
+        currentNodes[1]._state = "active";
+        currentNodes[1].setStyles();
+
+        // Remove the current node and replace
+        currentNodes[1] = currentNodes[0];
+        currentNodes[0] = node;
+        // TODO! Remove highlght code
+      }
+    }
+    var checkState = function(node){
+        console.log(node._state);
+        // Add the node to currently selected queue
+        if (node._state == "highlighted"){
+          addCurrentNode(node);
+        }
+        else {
+          removeCurrentNode(node);
+        }
+        console.log(currentNodes);
+    }
+    var config = {
+            dataSource: 'https://gist.githubusercontent.com/jharriman/3af94c45326abc9cddf7/raw/4798b5381d64fafeb4e743be67dfd1a4f8062d61/gistfile1.txt',
+            nodeClick: checkState
+          };
+    alchemy = new Alchemy(config);
+
+    // console.log(node.getProperties());
+
+  </script>
+  </body>
+</html>
