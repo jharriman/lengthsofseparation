@@ -78,7 +78,7 @@ class App(CypherSender):
 
     @cherrypy.expose
     def index(self):
-        with open("test.html", "r") as f:
+        with open("index.html", "r") as f:
             return f.read()
 
 class Graph(CypherSender):
