@@ -12,8 +12,6 @@ import geoip2.database
 import irc.bot
 import irc.strings
 from irc.client import ip_numstr_to_quad, ip_quad_to_numstr
-
-#import MySQLdb
 from py2neo import neo4j
 import py2neo.error
 
@@ -104,11 +102,10 @@ class TestBot(irc.bot.SingleServerIRCBot):
 
 def main():
     parser = argparse.ArgumentParser(description="Track anonymous edits to the English Wikipedia")
-    parser.add_argument('server', type=str)
-    parser.add_argument('channel', type=str)
-    parser.add_argument('nickname', type=str)
+    parser.add_argument('server', type=str, default="irc.wikimedia.org")
+    parser.add_argument('channel', type=str, default="#en.wikipedia")
+    parser.add_argument('nickname', type=str, default="los-bot")
     args = parser.parse_args()
-    #print("Usage: testbot <server[:port]> <channel> <nickname> <ip_range>")
 
     bot = TestBot(args.channel, args.nickname, args.server)
     bot.start()

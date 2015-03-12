@@ -1,20 +1,7 @@
-<!-- <!DOCTYPE html> -->
-<!-- <html> -->
-<!-- <body> -->
-<!-- <script src="http://cdn.graphalchemist.com/alchemy.min.js"></script> -->
-<!-- <script type="text/javascript"> -->
-<!--   alchemy.begin({ -->
-<!--         dataSource: "actors.json", -->
-<!--         nodeCaption: 'name', -->
-<!--         nodeMouseOver: 'name', -->
-<!--         cluster: true, -->
-<!--         clusterColours: ["#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E","#E6AB02"]}) -->
-<!-- </script> -->
-<!-- </body> -->
-<!-- </html> -->
 <html>
 <head>
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   <link rel="stylesheet" href="http://cdn.graphalchemist.com/alchemy.min.css"/>
 </head>
 <body>
@@ -22,6 +9,15 @@
 
   <script src="http://cdn.graphalchemist.com/alchemy.js"></script>
   <script type="text/javascript">
+    var txUrl = "http://localhost:8080/db/data/transaction/commit";
+    var xhr = new XMLHttpRequest();
+    var findPath = function(fr, to){
+      var urlString = ["", "path", fr.toString(), to.toString()].join("/");
+      $.get(urlString, function(data){
+        console.log(data);
+      });
+    }
+    findPath(50, 45);
     var currentNodes = [null, null];
     var removeCurrentNode = function(node){
       if (currentNodes[0] == node){
@@ -55,7 +51,6 @@
       }
     }
     var checkState = function(node){
-        console.log(node._state);
         // Add the node to currently selected queue
         if (node._state == "highlighted"){
           addCurrentNode(node);
@@ -66,12 +61,13 @@
         console.log(currentNodes);
     }
     var config = {
-            dataSource: 'https://gist.githubusercontent.com/jharriman/3af94c45326abc9cddf7/raw/4798b5381d64fafeb4e743be67dfd1a4f8062d61/gistfile1.txt',
-            nodeClick: checkState
+            dataSource: "/graph",
+            nodeClick: checkState,
+            forceLocked: false,
+            alpha: 0.00000000000001,
+            linkDistance: 40
           };
     alchemy = new Alchemy(config);
-
-    // console.log(node.getProperties());
 
   </script>
   </body>
