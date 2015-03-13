@@ -4,6 +4,9 @@ import jinja2
 from py2neo import neo4j
 import py2neo.error
 
+import os.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 def serializeGraph(graph):
     sg = graph.to_subgraph()
     nodes = []
@@ -78,7 +81,7 @@ class App(CypherSender):
 
     @cherrypy.expose
     def index(self):
-        with open("index.html", "r") as f:
+        with open("templates/index.html", "r") as f:
             return f.read()
 
 class Graph(CypherSender):
@@ -96,5 +99,22 @@ class Path(CypherSender):
     def index(self, fr, to):
         return "Path from %s to %s" % (fr, to)
 
+import yaml
 if __name__ == "__main__":
-    cherrypy.quickstart(App())
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # cherrypy.config.update({'environment': 'production',
+    #                         'log.error_file': 'site.log',
+    #                         'log.screen': True})
+    #
+    # conf = {'/data': {'tools.staticdir.on': True,
+    #                   'tools.staticdir.dir': os.path.join(current_dir, 'data')}}
+    #
+    # cherrypy.quickstart(App(), "/", config=conf)
+    conf = {
+        "/js" : {
+            "tools.staticdir.on" : True,
+            "tools.staticdir.dir" : os.path.join(current_dir, 'data/js')
+        }
+      }
+    with open("conf/server.conf", "r") as f:
+        cherrypy.quickstart(App(), config=conf)

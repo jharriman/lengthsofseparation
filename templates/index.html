@@ -7,7 +7,7 @@
 <body>
   <div class="alchemy" id="alchemy"></div>
 
-  <script src="http://cdn.graphalchemist.com/alchemy.js"></script>
+  <script src="/js/alchemy.min.js"></script>
   <script type="text/javascript">
     var txUrl = "http://localhost:8080/db/data/transaction/commit";
     var xhr = new XMLHttpRequest();
@@ -65,7 +65,8 @@
             nodeClick: checkState,
             forceLocked: false,
             alpha: 0.00000000000001,
-            linkDistance: 40
+            linkDistance: 40,
+            friction: 0.2
           };
     alchemy = new Alchemy(config);
 
