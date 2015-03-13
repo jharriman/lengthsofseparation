@@ -7,31 +7,8 @@ import py2neo.error
 import os.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-def serializeGraph(graph):
-    sg = graph.to_subgraph()
-    nodes = []
-    relationships = []
-    for i in sg.nodes:
-        # Get the ref number
-        refNum = int(i.ref.split("/")[1])
-
-        # Get the appropriate caption
-        if "User" in i.labels:
-            caption = i.properties["ip"]
-        elif "Topic" in i.labels:
-            caption = i.properties["name"]
-
-        # Add the relevant properties
-        result = i.properties
-        result.update({"id" : refNum, "caption"  : caption})
-
-        # Add it to the nodes list
-        nodes.append(result)
-    for i in sg.relationships:
-        # Source, target, caption
-        source, target, caption = i.start.split("/")[1], i.end.split("/")[1], i.type
-        relationships.append({"source" : source, "target" : target, "caption" : caption})
-    return {"nodes" : nodes, "edges" : edges}
+class UnknownNodeException(Exception):
+    pass
 
 def serializeGraphStream(stream, nodeLabels, relationshipLabels):
     nodes = []
@@ -44,14 +21,20 @@ def serializeGraphStream(stream, nodeLabels, relationshipLabels):
 
             # # Avoid duplicating nodes in the JSON file if they already exist
             # if next((x for x in nodes if x["id"] == refNum), None) != None:
+
+            result = node.properties
+
             # Get the appropriate caption
             if "User" in node.labels:
                 caption = node.properties["ip"]
+                result.update({"type" : "user"})
             elif "Topic" in node.labels:
                 caption = node.properties["name"]
+                result.update({"type" : "topic"})
+            else:
+                raise UnknownNodeException
 
             # Add the relevant properties
-            result = node.properties
             result.update({"id" : refNum, "caption"  : caption})
 
             # Add it to the nodes list
@@ -114,6 +97,10 @@ if __name__ == "__main__":
         "/js" : {
             "tools.staticdir.on" : True,
             "tools.staticdir.dir" : os.path.join(current_dir, 'data/js')
+        },
+        "/css" : {
+            "tools.staticdir.on" : True,
+            "tools.staticdir.dir" : os.path.join(current_dir, 'data/css')
         }
       }
     with open("conf/server.conf", "r") as f:
