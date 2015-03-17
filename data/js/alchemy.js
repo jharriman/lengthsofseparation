@@ -1003,6 +1003,7 @@ a):(i&&(f?(c=f[0],d=f[1]):(c=k[0],d=k[1],i.invert&&(c=i.invert(c),d=i.invert(d))
         }
         if (edge._state !== "hidden") {
           edge._state = edge._state === "highlighted" ? "selected" : "active";
+          console.log(edge.a.styles);
           return edge.setStyles();
         }
       },
@@ -1243,7 +1244,7 @@ a):(i&&(f?(c=f[0],d=f[1]):(c=k[0],d=k[1],i.invert&&(c=i.invert(c),d=i.invert(d))
     };
 
     Layout.prototype.friction = function() {
-      return 0.9;
+      return this.a.conf.friction;
     };
 
     Layout.prototype.collide = function(node) {
@@ -1613,6 +1614,7 @@ a):(i&&(f?(c=f[0],d=f[1]):(c=k[0],d=k[1],i.invert&&(c=i.invert(c),d=i.invert(d))
         return d3.select(this.divSelector).node().parentElement.clientHeight;
       }
     },
+    friction: 0.9,
     alpha: 0.5,
     collisionDetection: true,
     nodeOverlap: 25,
