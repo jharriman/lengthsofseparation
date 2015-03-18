@@ -1,11 +1,67 @@
 body {
   width : 100%;
   font-family: 'Open Sans', sans-serif;
+  background-color: black;
 }
 h1 {
-  color: #FFF;
+  color: white;
 }
 .menu {
   position: fixed;
   z-index: 1
 }
+
+.link {
+  stroke: #FFF;
+  stroke-width: 1.5px;
+}
+
+.node {
+  cursor: move;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node.fixed {
+  fill: #686868;
+}
+
+.user {
+  fill: #FF0000;
+}
+.topic {
+  fill: #0000FF;
+}
+
+/* dataSource: "/graph",
+nodeClick: checkState,
+forceLocked: false,
+alpha: 0.00000000000001,
+linkDistance: 40,
+friction: 0.1,
+nodeTypes: {"type" : ["user", "topic"]},
+nodeStyle:{
+  "all" : {
+    color : "#00FF00"
+  },
+  "user" : {
+    color : "#FF0000",
+    selected: {
+      "color": "#ffffff",
+    },
+    highlighted: {
+      "color": "#b4dcff"
+    }
+  },
+  "topic" : {
+    color : "#0000FF",
+    selected: {
+      "color": "#ffffff",
+    },
+    highlighted: {
+      "color": "#b4dcff"
+    }
+  }
+},
+edgeMouseOver : function(){},
+deselectAll: refresh */

@@ -10,9 +10,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 class UnknownNodeException(Exception):
     pass
 
-def serializeRelationship(rel):
+def serializeRelationship(rel, nodes):
+    # Convert neo4j tag to index in list
+    start = int(rel.start_node.ref.split("/")[1])
+    end = int(rel.end_node.ref.split("/")[1])
+
     # Source, target, caption
-    source, target, caption = rel.start_node.ref.split("/")[1], rel.end_node.ref.split("/")[1], rel.type
+    source, target, caption = nodes[start], nodes[end], rel.type
     return {"source" : source, "target" : target, "caption" : caption}
 
 def serializeGraph(graph):
@@ -35,27 +39,37 @@ def serializeGraph(graph):
 
         # Add it to the nodes list
         nodes.append(result)
+    # Convert node list to an OrderedDict for easy lookup in relationship serialization
+    nodesLookup = {}
+    for index, item in enumerate(nodes):
+        nodesLookup[item["refNum"]] = index
     for i in sg.relationships:
         # Source, target, caption
-        relationships.append(serializeRelationship(rel))
-    return {"nodes" : nodes, "edges" : edges}
+        relationships.append(serializeRelationship(rel, nodesLookup))
+    return {"nodes" : nodes, "links" : edges}
 
 def serializeGraphStream(stream, nodeLabels, relationshipLabels):
     nodes = []
+    nodesLookup = {}
     relationships = []
+    count = 0
     for i in stream:
         for label in nodeLabels:
             node = getattr(i, label)
-            # Avoid duplicating nodes in the JSON file if they already exist
-            if next((x for x in nodes if x["id"] == refNum), None) != None:
-                continue
-
-            result = node.properties
 
             # Get the ref number
             refNum = int(node.ref.split("/")[1])
-            result.update({"neo4j_node_id" : refNum})
 
+            # Avoid duplicating nodes in the JSON file if they already exist
+            try:
+                nodesLookup[refNum]
+                continue
+            except KeyError:
+                pass
+
+            # Get the properties and update the result
+            result = node.properties
+            result.update({"neo4j_node_id" : refNum})
 
             # Get the appropriate caption
             if "User" in node.labels:
@@ -72,11 +86,15 @@ def serializeGraphStream(stream, nodeLabels, relationshipLabels):
 
             # Add it to the nodes list
             nodes.append(result)
+
+            # Store node in lookup table
+            nodesLookup[refNum] = count
+            count += 1
         for label in relationshipLabels:
             rel = getattr(i, label)
             # Source, target, caption
-            relationships.append(serializeRelationship(rel))
-    return {"nodes" : nodes, "edges" : relationships}
+            relationships.append(serializeRelationship(rel, nodesLookup))
+    return {"nodes" : nodes, "links" : relationships}
 
 def wrapHtml(file, template_dir):
     output = ""
@@ -111,7 +129,7 @@ class App(CypherSender):
 class Graph(CypherSender):
     @cherrypy.expose
     def index(self):
-        query = "MATCH (a:User)-[d:EDITED]->(b:Topic)<-[e:EDITED]-(c:User) RETURN a,b,c,d,e LIMIT %s" % ("1000")
+        query = "MATCH (a:User)-[d:EDITED]->(b:Topic)<-[e:EDITED]-(c:User) RETURN a,b,c,d,e LIMIT %s" % ("100")
         stream = self.getCypherStream(query)
         res = serializeGraphStream(stream, list("abc"), list("de"))
         stream.close()
