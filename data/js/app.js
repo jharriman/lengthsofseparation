@@ -4,12 +4,23 @@ var currentEdges= [];
 var globalGraph;
 
 function setSelected(node, setting, panelId){
+  // Set classes for css
   d3.select("#n" + node.neo4j_node_id.toString()).classed("selected", setting);
   d3.select("#n" + node.neo4j_node_id.toString()).classed("fixed", node.fixed = setting);
-  // Fill the panel
+
+  // Fill the panels
   if (typeof panelId != "undefined"){
-    showDetail(node, panelId);
+    if (setting){
+      showDetail(node, panelId);
+    }
+    else{
+      hideDetail(panelId);
+    }
   }
+}
+
+function hideDetail(panelID){
+  $("#paneld" + panelID.toString()).show();
 }
 
 // Operators on Alchemy structures
@@ -17,10 +28,12 @@ var removeCurrentNode = function(node){
   if (currentNodes[0] == node){
     setSelected(currentNodes[0], false);
     currentNodes[0] = null;
+    $("#lengthBtn").hide();
   }
   else if (currentNodes[1] == node){
     currentNodes[1] = currentNodes[0];
     currentNodes[0] = null;
+    $("#lengthBtn").hide();
   }
   // Else do nothing
   return
@@ -51,6 +64,9 @@ var addCurrentNode = function(n){
   setSelected(currentNodes[0], true, 1);
   setSelected(currentNodes[1], true, 2);
 
+  // Turn on download button
+  $("#lengthBtn").show();
+
   // Now that the nodes have been selected, highlight the edge of the shortest path between them
   // var id0 = currentNodes[0].getProperties().neo4j_node_id;
   // var id1 = currentNodes[1].getProperties().neo4j_node_id;
@@ -77,7 +93,11 @@ function showDetail(node, panelID){
   props.forEach(function(propName){
     $("<tr><td class='movie'>" + propName + "</td><td>" + node[propName] + "</td></tr>").appendTo(t);
   });
+  // Set the panel title
   $("#panelh" + panelID.toString()).html(node[props[0]]);
+
+  // Turn the panel on
+  $("#paneld" + panelID.toString()).show();
 }
 
 // Zoom listener

@@ -1,3 +1,4 @@
+/* App-wide settings */
 body {
   margin: 0;
   font-family: 'Open Sans', sans-serif;
@@ -7,27 +8,32 @@ h1 {
   float: left;
   color: white;
 }
+
+/* Fixed position elements */
 .menu {
   position: fixed;
   left: 0;
   right: 0;
-  width: 90%;
+  width: 98%;
   margin: 0 auto;
   z-index: 1;
   pointer-events: none;
 }
+.footer{
+  position: fixed;
+  bottom: 0px;
+}
 
+/* Graph settings */
 .link {
   stroke: #FFF;
   stroke-width: 1.5px;
 }
-
 .node {
   cursor: move;
   stroke: #000;
   stroke-width: 1.5px;
 }
-
 .node.fixed {
   fill: #686868;
 }
@@ -41,7 +47,6 @@ h1 {
 .topic {
   fill: #0000FF;
 }
-
 svg{
   width: 100%;
   height: 100%;
@@ -50,44 +55,45 @@ svg{
   margin: auto;
 }
 
+/* Panels */
+.flexbox {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  float:right;
+
+  margin-top: 10px;
+}
+
 .panel {
   float: right;
   clear: right;
   background-color: white;
+  display: none;
+  max-width: 400px;
+  flex: 1;
+}
+
+// Set panel order
+.flexbox .panel:nth-child(1) {
+  order: 0;
+}
+.flexbox .panel:nth-child(2) {
+  order: 1;
 }
 
 td {
   pointer-events: auto;
 }
-/* dataSource: "/graph",
-nodeClick: checkState,
-forceLocked: false,
-alpha: 0.00000000000001,
-linkDistance: 40,
-friction: 0.1,
-nodeTypes: {"type" : ["user", "topic"]},
-nodeStyle:{
-  "all" : {
-    color : "#00FF00"
-  },
-  "user" : {
-    color : "#FF0000",
-    selected: {
-      "color": "#ffffff",
-    },
-    highlighted: {
-      "color": "#b4dcff"
-    }
-  },
-  "topic" : {
-    color : "#0000FF",
-    selected: {
-      "color": "#ffffff",
-    },
-    highlighted: {
-      "color": "#b4dcff"
-    }
-  }
-},
-edgeMouseOver : function(){},
-deselectAll: refresh */
+
+/* Button styling */
+.length {
+  clear: right;
+  float: right;
+  width: 100%;
+  pointer-events: auto;
+  display: none;
+  order: 2
+}
