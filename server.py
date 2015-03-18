@@ -94,7 +94,7 @@ def serializeGraphStream(stream, nodeLabels, relationshipLabels):
             rel = getattr(i, label)
             # Source, target, caption
             relationships.append(serializeRelationship(rel, nodesLookup))
-    return {"nodes" : nodes, "links" : relationships}
+    return {"nodes" : nodes, "links" : relationships, 'lookup' : nodesLookup}
 
 def wrapHtml(file, template_dir):
     output = ""
