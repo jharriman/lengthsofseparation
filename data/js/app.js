@@ -1,8 +1,13 @@
-// State
+/* State */
 var currentNodes = [null, null];
 var currentEdges= [];
 var globalGraph;
 
+/* Presets */
+var userPropNames = ["ip", "cityName", "locationCode", "latitude", "longitude", "type"];
+var topicPropNames = ["name", "type"];
+
+/* Selection functions */
 function setSelected(node, setting, panelId){
   // Set classes for css
   d3.select("#n" + node.neo4j_node_id.toString()).classed("selected", setting);
@@ -17,6 +22,25 @@ function setSelected(node, setting, panelId){
       hideDetail(panelId);
     }
   }
+}
+
+function showDetail(node, panelID){
+  // Grab the table body element
+  var t = $("table#panel" + panelID.toString() + " tbody").empty();
+  if (node["type"] == "user"){
+    var props = userPropNames
+  }
+  else{
+    var props = topicPropNames
+  }
+  props.forEach(function(propName){
+    $("<tr><td class='movie'>" + propName + "</td><td>" + node[propName] + "</td></tr>").appendTo(t);
+  });
+  // Set the panel title
+  $("#panelh" + panelID.toString()).html(node[props[0]]);
+
+  // Turn the panel on
+  $("#paneld" + panelID.toString()).show();
 }
 
 function hideDetail(panelID){
@@ -74,33 +98,12 @@ var addCurrentNode = function(n){
 
 }
 
-var userPropNames = ["ip", "cityName", "locationCode", "latitude", "longitude", "type"];
-var topicPropNames = ["name", "type"];
-
 function lookupNodeById(nodeID){
   var nodeIndex = globalGraph.lookup[nodeID];
   return globalGraph.nodes[nodeIndex];
 }
-function showDetail(node, panelID){
-  // Grab the table body element
-  var t = $("table#panel" + panelID.toString() + " tbody").empty();
-  if (node["type"] == "user"){
-    var props = userPropNames
-  }
-  else{
-    var props = topicPropNames
-  }
-  props.forEach(function(propName){
-    $("<tr><td class='movie'>" + propName + "</td><td>" + node[propName] + "</td></tr>").appendTo(t);
-  });
-  // Set the panel title
-  $("#panelh" + panelID.toString()).html(node[props[0]]);
 
-  // Turn the panel on
-  $("#paneld" + panelID.toString()).show();
-}
-
-// Zoom listener
+/* D3 Functions */
 var zoomListener = d3.behavior.zoom()
   .scaleExtent([0.5, 2])
   .on("zoom", zoomHandler);
@@ -187,6 +190,14 @@ d3.json("/graph", function(error, graph) {
       })
       .attr("r", 12)
       .call(drag);
+  $('svg circle').tipsy({
+        gravity: 'n',
+        html: true,
+        title: function() {
+          var d = this.__data__;
+          return d.caption;
+        }
+      });
   globalGraph = graph;
 });
 
@@ -199,7 +210,3 @@ function tick() {
   node.attr("cx", function(d) { return d.x; })
       .attr("cy", function(d) { return d.y; });
 }
-
-// function dblclick(d) {
-//   d3.select(this).classed("fixed", d.fixed = false);
-// }

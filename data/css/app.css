@@ -54,6 +54,9 @@ svg{
 .graph{
   margin: auto;
 }
+text{
+  fill: white;
+}
 
 /* Panels */
 .flexbox {
