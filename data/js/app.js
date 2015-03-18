@@ -9,7 +9,8 @@ var width = 960,
 var force = d3.layout.force()
     .size([width, height])
     .charge(-400)
-    .linkDistance(40)
+    .linkDistance(50)
+    .friction(0.9)
     .on("tick", tick);
 
 var drag = force.drag()

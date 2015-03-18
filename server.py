@@ -129,7 +129,7 @@ class App(CypherSender):
 class Graph(CypherSender):
     @cherrypy.expose
     def index(self):
-        query = "MATCH (a:User)-[d:EDITED]->(b:Topic)<-[e:EDITED]-(c:User) RETURN a,b,c,d,e LIMIT %s" % ("100")
+        query = "MATCH (a:User)-[d:EDITED]->(b:Topic)<-[e:EDITED]-(c:User) RETURN a,b,c,d,e LIMIT %s" % ("1000")
         stream = self.getCypherStream(query)
         res = serializeGraphStream(stream, list("abc"), list("de"))
         stream.close()
