@@ -1,11 +1,65 @@
 /* State */
 var currentNodes = [null, null];
 var currentEdges= [];
+var currentShortest = [];
 var globalGraph;
+var globalAdjacencyTable;
 
 /* Presets */
 var userPropNames = ["ip", "cityName", "locationCode", "latitude", "longitude", "type"];
 var topicPropNames = ["name", "type"];
+
+/* Dijkstras */
+function makeAdjacencyTable(graph) {
+  var byRef = {};
+  graph.nodes.forEach(function(d, i){
+    byRef[i] = [];
+  })
+  graph.links.forEach(function(l){
+    /* Lookup lets us map to the index of the node in the nodes array directly,
+       which gives us a faster lookup.
+    */
+    byRef[graph.lookup[l.source.id]].push(graph.lookup[l.target.id]);
+    byRef[graph.lookup[l.target.id]].push(graph.lookup[l.source.id]);
+  })
+  return byRef;
+}
+
+function findShortestPath(graph, adjacencyTable, source, target){
+  // Clone an intital array to visit
+  var sourceId = source.neo4j_node_id;
+  var toVisit = adjacencyTable[graph.lookup[sourceId]].slice(0);
+
+  // Make an array of visited nodes
+  var visited = graph.nodes.map(function(){return null});
+  visited[graph.lookup[sourceId]] = [0, [graph.lookup[sourceId]]];
+  var vNum;
+  while(typeof (vNum = toVisit.pop()) != "undefined"){
+    var minVal = Number.POSITIVE_INFINITY;
+    var minPath = [];
+    // Check if neighbors have been visited
+    adjacencyTable[vNum].forEach(function(neighbor){
+      var neighborPath;
+      if((neighborPath = visited[neighbor]) != null){
+        minVal = Math.min(neighborPath[0], minVal);
+        // Set the path to the minimum neighbor path
+        if (minVal == neighborPath[0]){
+          minPath = neighborPath[1].slice(0);
+        }
+      }
+      else{
+        toVisit.push(neighbor);
+      }
+    });
+    minPath.push(vNum);
+    visited[vNum] = [minVal + 1, minPath];
+
+    // If we've just found the value for the target node, stop and report
+    if(vNum == graph.lookup[target.neo4j_node_id]){
+      return visited[vNum];
+    }
+  }
+}
 
 /* Selection functions */
 function setSelected(node, setting, panelId){
@@ -41,7 +95,7 @@ function showDetail(node, panelID){
 
   // Set the panel class based on the type of user
   var panel = $("#paneld" + panelID.toString());
-  panel.removeClass("panel-primary panel-danger");
+  panel.removeClass("panel-info panel-warning");
   if (node["type"] == "user"){
     panel.addClass("panel-info");
   }
@@ -78,7 +132,7 @@ var addCurrentNode = function(n){
     return;
   }
 
-  // Highlight this node
+  /* Highlight this node */
   if(currentNodes[0] == null){
     currentNodes[0] = n;
     setSelected(currentNodes[0], true, 1);
@@ -94,18 +148,36 @@ var addCurrentNode = function(n){
     currentNodes[1] = currentNodes[0];
     currentNodes[0] = n;
   }
-  // Set updates
+  /* Configure CSS */
   setSelected(currentNodes[0], true, 1);
   setSelected(currentNodes[1], true, 2);
 
-  // Turn on download button
-  $("#lengthBtn").show();
+  /* Download button */
+  // Find the shortest path
+  currentShortest = findShortestPath(globalGraph, globalAdjacencyTable, currentNodes[0], currentNodes[1]);
 
-  // Now that the nodes have been selected, highlight the edge of the shortest path between them
-  // var id0 = currentNodes[0].getProperties().neo4j_node_id;
-  // var id1 = currentNodes[1].getProperties().neo4j_node_id;
-  // findPath(id0, id1);
+  // Create document to show shortest path
+  var popBox = shortestPopBox(currentShortest, globalGraph);
 
+  // Show the button
+  $("#lengthBtn").attr("data-featherlight", popBox)
+    .show();
+
+}
+
+function shortestPopBox(path, graph){
+  var retStr = "";
+  /* Get the arithmetic encoding */
+  var neo4j_ids = path[1].map(function(nodeId){
+    return graph.nodes[nodeId].neo4j_node_id;
+  });
+  // Ask cherrypy for the arithmetic encoding
+  var aenc = 0.0;
+  retStr += "<h1>Arithmetic Encoding:" + aenc.toString() + "</h1>"
+
+  /* Add the path */
+
+  return retStr;
 }
 
 function lookupNodeById(nodeID){
@@ -219,6 +291,7 @@ d3.json("/graph", function(error, graph) {
         }
       });
   globalGraph = graph;
+  globalAdjacencyTable = makeAdjacencyTable(graph);
 });
 
 function tick() {

@@ -103,3 +103,7 @@ td {
   display: none;
   order: 2
 }
+
+.featherlight-content h1{
+  color: black;
+}
