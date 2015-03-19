@@ -57,6 +57,9 @@ svg{
 text{
   fill: white;
 }
+.tipsy-inner{
+  min-width: 100px;
+}
 
 /* Panels */
 .flexbox {

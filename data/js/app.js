@@ -39,8 +39,18 @@ function showDetail(node, panelID){
   // Set the panel title
   $("#panelh" + panelID.toString()).html(node[props[0]]);
 
+  // Set the panel class based on the type of user
+  var panel = $("#paneld" + panelID.toString());
+  panel.removeClass("panel-primary panel-danger");
+  if (node["type"] == "user"){
+    panel.addClass("panel-info");
+  }
+  else {
+    panel.addClass("panel-warning");
+  }
+
   // Turn the panel on
-  $("#paneld" + panelID.toString()).show();
+  panel.show();
 }
 
 function hideDetail(panelID){
@@ -141,6 +151,7 @@ var rect = svg.append("rect")
 
 function dragstarted(d) {
   d3.event.sourceEvent.stopPropagation();
+
   // Make fixed
   d3.select(this).classed("fixed", d.fixed = true);
 
@@ -152,6 +163,8 @@ function dragstarted(d) {
 
 function dragged(d) {
   // Scale dragging down as you increase in scale level
+  // Turn off tooltip
+  $("#n" + d.neo4j_node_id).tipsy("hide");
   d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
 }
 
@@ -189,10 +202,17 @@ d3.json("/graph", function(error, graph) {
         return "n" + d.neo4j_node_id;
       })
       .attr("r", 12)
+      .on("mouseover", function(d){
+        $("#n" + d.neo4j_node_id).tipsy("show");
+      })
+      .on("mouseout", function(d){
+        $("#n" + d.neo4j_node_id).tipsy("hide");
+      })
       .call(drag);
   $('svg circle').tipsy({
-        gravity: 'n',
+        gravity: 'w',
         html: true,
+        trigger: "manual",
         title: function() {
           var d = this.__data__;
           return d.caption;
