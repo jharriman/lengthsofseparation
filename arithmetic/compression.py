@@ -11,10 +11,13 @@ def lerp(l, h, w):
     return (1-w) * l + w * h
 
 class ArithmeticEncoder(object):
-    def __init__(self, dictFile):
-        # Open the word list for reading
-        with open(dictFile, "r") as f:
-            lines = f.readlines()
+    def __init__(self, dictionaryLines):
+        if (type(dictionaryLines) == str):
+            # Open the word list for reading
+            with open(dictFile, "r") as f:
+                lines = f.readlines()
+        else:
+            lines = dictionaryLines
 
         # Generate the frequency, word_list, alphabet and the empirical probabilities of the letters
         frequency, word_list = self.letters_and_frequencies(lines)

@@ -4,6 +4,7 @@ var currentEdges= [];
 var currentShortest = [];
 var globalGraph;
 var globalAdjacencyTable;
+var gDataEncoding;
 
 /* Presets */
 var userPropNames = ["ip", "cityName", "locationCode", "latitude", "longitude", "type"];
@@ -156,28 +157,60 @@ var addCurrentNode = function(n){
   // Find the shortest path
   currentShortest = findShortestPath(globalGraph, globalAdjacencyTable, currentNodes[0], currentNodes[1]);
 
-  // Create document to show shortest path
-  var popBox = shortestPopBox(currentShortest, globalGraph);
-
   // Show the button
-  $("#lengthBtn").attr("data-featherlight", popBox)
-    .show();
+  var button = $("#lengthBtn");
+  // Create document to show shortest path
+  var popBox = shortestPopBoxToButton(currentShortest, globalGraph, button);
+
+  $("#lengthBtn").show();
 
 }
 
-function shortestPopBox(path, graph){
-  var retStr = "";
+function downloadFile(){
+  gDataEncoding["maxLength"] = 10;
+  var form = $('form[name="download"] input[name="jsonStr"]').val(JSON.stringify(gDataEncoding));
+  $(".featherlight").click();
+  return true;
+};
+
+function shortestPopBoxToButton(path, graph, button){
   /* Get the arithmetic encoding */
   var neo4j_ids = path[1].map(function(nodeId){
     return graph.nodes[nodeId].neo4j_node_id;
   });
   // Ask cherrypy for the arithmetic encoding
-  var aenc = 0.0;
-  retStr += "<h1>Arithmetic Encoding:" + aenc.toString() + "</h1>"
+  $.ajax({
+      type: "POST",
+      url: "/encoding",
+      data: JSON.stringify(neo4j_ids),
+      contentType: "application/json",
+      dataType: "json",
+      success: function(data){
+        var retStr = "";
+        var sum = 0.0;
+        data.encoding.forEach(function(es){
+          es.forEach(function(e){
+            sum += parseFloat(e);
+          })
+        })
+        retStr += "<h1>" + sum + "</h1>\n";
+        // Report the path back
+        path = "";
+        data.path.forEach(function(p){
+          path += p + ' <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span> '
+        })
+        retStr += "<p>" + path + "</p>"
+        retStr += '<form name="download" method="post" action="/geo" onsubmit="return downloadFile();"><input name="jsonStr" id="geoStr" type="hidden"/>'
+        retStr += '<button class="btn btn-danger downloadBtn" type="submit" value="Download"><h4>Download?</h4></button>'
+        retStr += '</form>'
 
-  /* Add the path */
+        // Configure download data
+        gDataEncoding = data;
 
-  return retStr;
+        // Turn on lightbox
+        button.attr("data-featherlight", retStr);
+      }
+  });
 }
 
 function lookupNodeById(nodeID){
