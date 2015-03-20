@@ -39,15 +39,31 @@ class CypherSender(object):
         return self.neo.cypher.stream(query)
 
 class App(CypherSender):
-    def __init__(self):
-        # Feed in data to the Arithmetic Encoder
-        with open("data/words/English_word_list.txt", "r") as f:
-            lines = f.readlines()
-            self.aenc = ArithmeticEncoder(lines)
-
+    def __init__(self, useWordList=True):
+        super(App, self).__init__()
+        # Choose whether or not to use the whole English word list, or just use the input from the database.
+        if useWordList:
+            # Feed in data to the Arithmetic Encoder
+            with open("data/words/English_word_list.txt", "r") as f:
+                lines = f.readlines()
+                self.aenc = ArithmeticEncoder(lines)
+        else:
+            self.databaseList = self.makeEncodingList()
+            self.aenc = ArithmeticEncoder(self.databaseList)
         self.path = Path()
         self.graph = Graph()
-        super(App, self).__init__()
+
+    def makeEncodingList(self):
+        stream = self.getCypherStream("MATCH (n) Return n;")
+        wordList = set()
+        for i in stream:
+            node = i.n
+            if "Topic" in node.labels:
+                wordList.update(node.properties["name"].split())
+            elif "User" in node.labels:
+                wordList.add(node.properties["ip"][0])
+        return list(wordList)
+
 
     @cherrypy.expose
     def index(self):
@@ -142,4 +158,4 @@ if __name__ == "__main__":
         }
       }
     with open("conf/server.conf", "r") as f:
-        cherrypy.quickstart(App(), config=conf)
+        cherrypy.quickstart(App(useWordList=False), config=conf)

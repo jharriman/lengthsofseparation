@@ -14,7 +14,7 @@ class ArithmeticEncoder(object):
     def __init__(self, dictionaryLines):
         if (type(dictionaryLines) == str):
             # Open the word list for reading
-            with open(dictFile, "r") as f:
+            with open(dictionaryLines, "r") as f:
                 lines = f.readlines()
         else:
             lines = dictionaryLines
