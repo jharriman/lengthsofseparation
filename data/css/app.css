@@ -106,4 +106,26 @@ td {
 
 .featherlight-content h1{
   color: black;
+  width: 100%;
+  text-align: center;
+}
+
+.featherlight-content p{
+  width: 100%;
+  text-align: center;
+}
+
+.featherlight-content form{
+  width: 100%;
+  float:right;
+  clear:right;
+  margin: 15px 0px 10px 0px;
+}
+
+.featherlight-content button{
+  width:100%;
+}
+
+.featherlight-content{
+  max-width: 800px;
 }

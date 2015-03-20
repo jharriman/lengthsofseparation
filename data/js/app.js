@@ -7,7 +7,7 @@ var globalAdjacencyTable;
 var gDataEncoding;
 
 /* Presets */
-var userPropNames = ["ip", "cityName", "locationCode", "latitude", "longitude", "type"];
+var userPropNames = ["ip", "cityName", "locationCode", "country", "latitude", "longitude", "type"];
 var topicPropNames = ["name", "type"];
 
 /* Dijkstras */
@@ -189,16 +189,18 @@ function shortestPopBoxToButton(path, graph, button){
         var retStr = "";
         var sum = 0.0;
         data.encoding.forEach(function(es){
-          es.forEach(function(e){
+          // TODO: Need a better fix for this, but the array dereference is because of the way I have to tag things
+          es[1].forEach(function(e){
             sum += parseFloat(e);
           })
         })
         retStr += "<h1>" + sum + "</h1>\n";
         // Report the path back
         path = "";
-        data.path.forEach(function(p){
-          path += p + ' <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span> '
+        data.path.slice(0,-1).forEach(function(p){
+          path += p[1] + ' <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span> ';
         })
+        path += data.path[-1];
         retStr += "<p>" + path + "</p>"
         retStr += '<form name="download" method="post" action="/geo" onsubmit="return downloadFile();"><input name="jsonStr" id="geoStr" type="hidden"/>'
         retStr += '<button class="btn btn-danger downloadBtn" type="submit" value="Download"><h4>Download?</h4></button>'
@@ -230,7 +232,7 @@ var force = d3.layout.force()
     .size([width, height])
     .charge(-400)
     .linkDistance(50)
-    .friction(0.9)
+    .friction(0.85)
     .on("tick", tick);
 
 var drag = force.drag()

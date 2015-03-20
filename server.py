@@ -14,9 +14,9 @@ import py2neo.error
 
 ## In-project ##
 ################
-from serializers import serializeGraphStream
-from arithmetic.compression import ArithmeticEncoder
-import geometry
+from serializers import serializeGraphStream, serializeGraphStreamList
+from core.compression import ArithmeticEncoder
+import core.geometry
 
 def wrapHtml(file, template_dir):
     output = ""
@@ -54,7 +54,7 @@ class App(CypherSender):
         self.graph = Graph()
 
     def makeEncodingList(self):
-        stream = self.getCypherStream("MATCH (n) Return n;")
+        stream = self.getCypherStream("MATCH (n) RETURN n")
         wordList = set()
         for i in stream:
             node = i.n
@@ -78,16 +78,18 @@ class App(CypherSender):
         namesOnPath = []
         for i in path:
             node = self.neo.node(i)
+            # Append the country of the user
             if "User" in node.labels:
-                # TODO! Include ips as part of the encodeable set
-                pass
-                # namesOnPath.append(node.properties["ip"][0])
+                cityName = node.properties["cityName"] if node.properties["cityName"] else ""
+                country = node.properties["country"] if node.properties["country"] else ""
+                namesOnPath.append([1, " ".join([cityName, country])])
             elif "Topic" in node.labels:
-                namesOnPath.append(node.properties["name"])
+                namesOnPath.append([0,node.properties["name"]])
         encodedSet = []
-        for name in namesOnPath:
-            # TODO! include periods in the dictionary set
-            encodedSet.append(self.aenc.encodePhrase(name.replace(".","").replace(":", "")))
+        for nameTagSet in namesOnPath:
+            tag = nameTagSet[0]
+            name = nameTagSet[1]
+            encodedSet.append([tag, self.aenc.encodePhrase(name.replace(".","").replace(":", ""))])
         return {"encoding" : encodedSet, "path" : namesOnPath}
 
     @cherrypy.expose
@@ -97,8 +99,8 @@ class App(CypherSender):
         # Unify the sequence
         sequenceSet = []
         for s in data["encoding"]:
-            sequenceSet += s
-        geoStr = geometry.createConnections(sequenceSet, data["maxLength"])
+            sequenceSet.extend([[s[0],x] for x in s[1]])
+        geoStr = core.geometry.createConnections(sequenceSet, data["maxLength"])
         # Write the string into a buffer
         buf = StringIO.StringIO()
         buf.write(geoStr)
@@ -109,14 +111,33 @@ class App(CypherSender):
         return file_generator(buf);
 
 
+def getMostConnectedTopics(stream):
+    nodes = []
+    for i in stream:
+        node = getattr(i, "n")
+        nodes.append(int(node.ref.split("/")[1]))
+    return nodes
+
 class Graph(CypherSender):
     @cherrypy.expose
     def index(self):
-        query = "MATCH (a:User)-[d:EDITED]->(b:Topic)<-[e:EDITED]-(c:User) RETURN a,b,c,d,e LIMIT %s" % ("10")
+        # Find the most connected Topics
+        query = "MATCH (x)-[r]->(n) RETURN n, COUNT(r) ORDER BY COUNT(r) DESC LIMIT 10"
         stream = self.getCypherStream(query)
-        res = serializeGraphStream(stream, list("abc"), list("de"))
+        mostConnectedTopics = getMostConnectedTopics(stream)
+
+        # Get the nodes connected to the most connected nodes and everything
+        # they are connected to.
+        streams = []
+        for refNum in mostConnectedTopics:
+            query = "MATCH (a)-[r:EDITED*1..2]-(d) WHERE id(d)=%d RETURN a,r,d LIMIT 100" % (refNum)
+            streams.append(self.getCypherStream(query))
+        # query = "MATCH (a:User)-[d:EDITED]->(b:Topic) WITH a,d,b,count(d) as connections RETURN a,d,b ORDER BY connections DESC LIMIT %s" % ("1000")
+        # graph = serializeGraphStream(stream, list("ab"), list("d"))
+        # Serialize all the streams
+        graph = serializeGraphStreamList(streams, list("ad"), list("r"))
         stream.close()
-        return json.dumps(res)
+        return json.dumps(graph)
 
 @cherrypy.popargs("fr", "to")
 class Path(CypherSender):

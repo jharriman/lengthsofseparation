@@ -1,11 +1,11 @@
-from arithmetic.compression import ArithmeticEncoder
+from compression import ArithmeticEncoder
 
 def createConnections(sequence, maxLength):
     # Settings
-    separation = 4
-    cubeSize = 3
-    interludeSize = 1
-    ySeparation = 4
+    separation = 10
+    cubeSize = 6
+    interludeSize = 3
+    ySeparation = 10
     scale = 50
 
     # Counters
@@ -28,7 +28,7 @@ def createConnections(sequence, maxLength):
             # Link this row to the next row
             if reverse:
                 output += "translate([%f, %f, 0]) rotate([0,0,-90]) cube([%f, %f, %f]);" % (yAdjustment, currentPosition + interludeSize/2, interludeSize, separation, interludeSize)
-                currentPosition -= interludeSize/2
+                currentPosition -= 3 * interludeSize/4
             else:
                 output += "translate([%f, %f, 0]) rotate([0,0,-90]) cube([%f, %f, %f]);" % (yAdjustment, currentPosition + interludeSize/2, interludeSize, separation, interludeSize)
                 currentPosition += interludeSize/2
